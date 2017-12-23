@@ -1,0 +1,9 @@
+{
+  "name": "Save text to file",
+  "description": "Saves highlighted text to a file.",
+  "version": "0.1",
+  "minimum_chrome_version": "16.0.884",
+  "permissions": ["contextMenus", "downloads", "<all_urls>"],
+  "background": {"scripts": ["bg.js"], "persistent": false},
+  "manifest_version": 2
+}
