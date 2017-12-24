@@ -25,15 +25,19 @@ Output using each of the different options:
     custom-prefix--`20172001`.txt
     custom-prefix--.txt
 
-3. Show directory selection dialog
+3. Save current URL in file
+
+Whether to include the current URL at the top of the saved file.
+
+4. Show directory selection dialog
 
 Whether user can select an alternative directory and/or filename before text is saved.
 
-4. Show notifications
+5. Show notifications
 
 Whether notifications are displayed every-time text is saved.
 
-5. If file exists
+6. If file exists
 
     Uniquify
 
