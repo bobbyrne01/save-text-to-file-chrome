@@ -1,5 +1,4 @@
 'use strict';
-
 /*******************************************************************************
  * Copyright IBM Corp. 2017
 
@@ -17,11 +16,14 @@
  * limitations under the License.
  *******************************************************************************/
 
-// Saves option to chrome.storage
+const DEFAULT_FILE_NAME_PREFIX = 'save-text-to-file--';
 function saveOptions() {
-  var fileNamePrefix = document.getElementById('fileNamePrefix').value;
   chrome.storage.sync.set({
-    fileNamePrefix: fileNamePrefix
+    fileNamePrefix: document.getElementById('fileNamePrefix').value,
+    dateFormat: document.getElementById('dateFormat').value,
+    directorySelectionDialog: document.getElementById('directorySelectionDialog').checked,
+    notifications: document.getElementById('notifications').checked,
+    conflictAction: document.getElementById('conflictAction').value
   }, function() {
     var status = document.getElementById('status');
     status.textContent = 'Options saved.';
@@ -31,13 +33,21 @@ function saveOptions() {
   });
 }
 
-// Restores fileNamePrefix state using the preferences stored in chrome.storage.
+// Restores state using the preferences stored in chrome.storage.
 function restoreOptions() {
-  // default fileNamePrefix value = 'save-text-to-file--'.
+  // default values
   chrome.storage.sync.get({
-    fileNamePrefix: 'save-text-to-file--'
+    fileNamePrefix: DEFAULT_FILE_NAME_PREFIX,
+    dateFormat: 0,
+    directorySelectionDialog: false,
+    notifications: true,
+    conflictAction: 'uniquify'
   }, function(items) {
     document.getElementById('fileNamePrefix').value = items.fileNamePrefix;
+    document.getElementById('dateFormat').value = items.dateFormat;
+    document.getElementById('directorySelectionDialog').checked = items.directorySelectionDialog;
+    document.getElementById('notifications').checked = items.notifications;
+    document.getElementById('conflictAction').value = items.conflictAction;
   });
 }
 document.addEventListener('DOMContentLoaded', restoreOptions);
