@@ -17,6 +17,7 @@
  *******************************************************************************/
 
 const DEFAULT_FILE_NAME_PREFIX = 'save-text-to-file--';
+
 function saveOptions() {
   chrome.storage.sync.set({
     fileNamePrefix: document.getElementById('fileNamePrefix').value,

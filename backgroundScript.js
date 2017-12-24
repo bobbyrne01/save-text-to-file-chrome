@@ -53,7 +53,6 @@ function createFileName() {
     } else {
       fileName += DEFAULT_FILE_NAME_PREFIX;
     }
-
   }
 
   function _addDate() {
