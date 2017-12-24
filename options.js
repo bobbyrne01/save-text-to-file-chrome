@@ -22,6 +22,7 @@ function saveOptions() {
   chrome.storage.sync.set({
     fileNamePrefix: document.getElementById('fileNamePrefix').value,
     dateFormat: document.getElementById('dateFormat').value,
+    urlInFile: document.getElementById('urlInFile').checked,
     directorySelectionDialog: document.getElementById('directorySelectionDialog').checked,
     notifications: document.getElementById('notifications').checked,
     conflictAction: document.getElementById('conflictAction').value
@@ -40,12 +41,14 @@ function restoreOptions() {
   chrome.storage.sync.get({
     fileNamePrefix: DEFAULT_FILE_NAME_PREFIX,
     dateFormat: 0,
+    urlInFile: false,
     directorySelectionDialog: false,
     notifications: true,
     conflictAction: 'uniquify'
   }, function(items) {
     document.getElementById('fileNamePrefix').value = items.fileNamePrefix;
     document.getElementById('dateFormat').value = items.dateFormat;
+    document.getElementById('urlInFile').checked = items.urlInFile;
     document.getElementById('directorySelectionDialog').checked = items.directorySelectionDialog;
     document.getElementById('notifications').checked = items.notifications;
     document.getElementById('conflictAction').value = items.conflictAction;

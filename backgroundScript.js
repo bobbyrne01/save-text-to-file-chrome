@@ -27,17 +27,35 @@ const YYYYMMDD = '3';
 const YYYYDDMM = '4';
 var fileNamePrefix;
 var dateFormat;
+var urlInFile;
 var directorySelectionDialog;
 var notifications;
 var conflictAction;
 
 function saveTextToFile(info) {
-  var blob = new Blob([info.selectionText], {
-    type: 'text/plain'
+  createFileContents(info.selectionText, function(fileContents) {
+    var blob = new Blob([fileContents], {
+      type: 'text/plain'
+    });
+    var url = URL.createObjectURL(blob);
+    var fileName = createFileName();
+    startDownloadOfTextToFile(url, fileName);
   });
-  var url = URL.createObjectURL(blob);
-  var fileName = createFileName();
-  startDownloadOfTextToFile(url, fileName);
+}
+
+function createFileContents(selectionText, callback) {
+  if (urlInFile) {
+    chrome.tabs.query({
+      'active': true,
+      'lastFocusedWindow': true
+    }, function(tabs) {
+      var url = tabs[0].url;
+      var text = url + '\n\n' + selectionText;
+      callback(text);
+    });
+  } else {
+    callback(selectionText);
+  }
 }
 
 function createFileName() {
@@ -130,12 +148,14 @@ function notify(message) {
 chrome.storage.sync.get({
   fileNamePrefix: DEFAULT_FILE_NAME_PREFIX,
   dateFormat: 0,
+  urlInFile: false,
   showDirSelectionDialog: false,
   notifications: true,
   conflictAction: 'uniquify'
 }, function(items) {
   fileNamePrefix = items.fileNamePrefix;
   dateFormat = items.dateFormat;
+  urlInFile = items.urlInFile;
   directorySelectionDialog = items.directorySelectionDialog;
   notifications = items.notifications;
   conflictAction = items.conflictAction;
@@ -144,6 +164,7 @@ chrome.storage.sync.get({
 chrome.storage.onChanged.addListener(function(changes) {
   _updatePrefixOnChange();
   _updateDateFormatOnChange();
+  _updateUrlInFileOnChange();
   _updateDirectorySelectionOnChange();
   _updateNotificationsOnChange();
   _updateConflictActionOnChange();
@@ -160,6 +181,14 @@ chrome.storage.onChanged.addListener(function(changes) {
     if (changes.dateFormat) {
       if (changes.dateFormat.newValue !== changes.dateFormat.oldValue) {
         dateFormat = changes.dateFormat.newValue;
+      }
+    }
+  }
+
+  function _updateUrlInFileOnChange() {
+    if (changes.urlInFile) {
+      if (changes.urlInFile.newValue !== changes.urlInFile.oldValue) {
+        urlInFile = changes.urlInFile.newValue;
       }
     }
   }
