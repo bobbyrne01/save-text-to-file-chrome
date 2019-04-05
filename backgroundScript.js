@@ -1,6 +1,5 @@
 'use strict';
 /*******************************************************************************
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,34 +17,57 @@ const MENU_ITEM_ID = 'save-text-to-file-menu-item';
 const NOTIFICATION_ID = 'save-text-to-file-notification';
 const EXTENSION_TITLE = 'Save text to file';
 const DEFAULT_FILE_NAME_PREFIX = 'save-text-to-file--';
-const EPOCH = '0';
 const DDMMYYYY = '1';
 const MMDDYYYY = '2';
 const YYYYMMDD = '3';
 const YYYYDDMM = '4';
+const NONE = '5';
+const DATE_CUSTOM_TITLE = '0';
+const DATE_TITLE_CUSTOM = '1';
+const CUSTOM_DATE_TITLE = '2';
+const CUSTOM_TITLE_DATE = '3';
+const TITLE_CUSTOM_DATE = '4';
+const TITLE_DATE_CUSTOM = '5';
 var fileNamePrefix;
 var dateFormat;
+var fileNameComponentOrder;
+var prefixPageTitleInFileName;
+var fileNameComponentSeparator = '-';
 var urlInFile;
 var directorySelectionDialog;
 var notifications;
 var conflictAction;
 
 function saveTextToFile(info) {
-  createFileContents(info.selectionText, function(fileContents) {
-    var blob = new Blob([fileContents], {
-      type: 'text/plain'
-    });
-    var url = URL.createObjectURL(blob);
-    var fileName = createFileName();
-    startDownloadOfTextToFile(url, fileName);
+  chrome.tabs.executeScript({
+    code: '(' + getSelectionText.toString() + ')()',
+    allFrames: true,
+    matchAboutBlank: true
+  }, function (results) {
+    if (results[0]) {
+      createFileContents(results[0], function(fileContents) {
+        var blob = new Blob([fileContents], {
+          type: 'text/plain'
+        });
+        var url = URL.createObjectURL(blob);
+        createFileName(function(fileName) {
+          var sanitizedFileName = sanitizeFileName(fileName);
+          startDownloadOfTextToFile(url, sanitizedFileName);
+        });
+      });
+    }
   });
+}
+
+function sanitizeFileName(fileName) {
+  return fileName.replace(/[\/\\|":*?<>]/g, '_');
 }
 
 function createFileContents(selectionText, callback) {
   if (urlInFile) {
     chrome.tabs.query({
-      'active': true,
-      'lastFocusedWindow': true
+      active: true,
+      lastFocusedWindow: true
     }, function(tabs) {
       var url = tabs[0].url;
       var text = url + '\n\n' + selectionText;
@@ -56,36 +78,65 @@ function createFileContents(selectionText, callback) {
   }
 }
 
-function createFileName() {
+function createFileName(callback) {
   var fileName = '';
-  _addPrefix();
-  _addDate();
-  _addExtension();
-  return fileName;
-
-  function _addPrefix() {
-    if (fileNamePrefix !== '') {
-      fileName += fileNamePrefix;
+  var pageTitle = '';
+  var date = _getDate();
+  var extension = _getExtension();
+  var customText = fileNamePrefix;
+  _getPageTitleToFileName(function() {
+    if (fileNameComponentOrder === DATE_CUSTOM_TITLE) {
+      fileName = date + (date === '' ? '' : fileNameComponentSeparator) + customText + (pageTitle === '' ? '' : fileNameComponentSeparator) + pageTitle;
+    } else if (fileNameComponentOrder === DATE_TITLE_CUSTOM) {
+      fileName = date + (date === '' ? '' : fileNameComponentSeparator) + pageTitle + (pageTitle === '' ? '' : fileNameComponentSeparator) + customText;
+    } else if (fileNameComponentOrder === CUSTOM_DATE_TITLE) {
+      fileName = customText + (date === '' ? '' : fileNameComponentSeparator) + date + (pageTitle === '' ? '' : fileNameComponentSeparator) + pageTitle;
+    } else if (fileNameComponentOrder === CUSTOM_TITLE_DATE) {
+      fileName = customText + (pageTitle === '' ? '' : fileNameComponentSeparator) + pageTitle + (date === '' ? '' : fileNameComponentSeparator) + date;
+    } else if (fileNameComponentOrder === TITLE_CUSTOM_DATE) {
+      fileName = pageTitle + (pageTitle === '' ? '' : fileNameComponentSeparator) + customText + (date === '' ? '' : fileNameComponentSeparator) + date;
+    } else if (fileNameComponentOrder === TITLE_DATE_CUSTOM) {
+      fileName = pageTitle + (pageTitle === '' ? '' : fileNameComponentSeparator) + date + (date === '' ? '' : fileNameComponentSeparator) + customText;
+    }
+    if (fileName === '') {
+      notify('Error: Filename cannot be empty, please review preferences.');
     } else {
-      fileName += DEFAULT_FILE_NAME_PREFIX;
+      fileName += extension;
+      callback(fileName);
+    }
+  });
+
+  function _getPageTitleToFileName(callback) {
+    if (prefixPageTitleInFileName) {
+      chrome.tabs.query({
+        active: true,
+        lastFocusedWindow: true
+      }, function(tabs) {
+        pageTitle = tabs[0].title;
+        callback();
+      });
+    } else {
+      callback();
     }
   }
 
-  function _addDate() {
+  function _getDate() {
     var currentDate = new Date();
     var day = _determineDay();
     var month = _determineMonth();
     var year = currentDate.getFullYear();
     if (dateFormat === DDMMYYYY) {
-      fileName += day + '-' + month + '-' + year;
+      return day + '-' + month + '-' + year;
     } else if (dateFormat === MMDDYYYY) {
-      fileName += month + '-' + day + '-' + year;
+      return month + '-' + day + '-' + year;
     } else if (dateFormat === YYYYMMDD) {
-      fileName += year + '-' + month + '-' + day;
+      return year + '-' + month + '-' + day;
     } else if (dateFormat === YYYYDDMM) {
-      fileName += year + '-' + day + '-' + month;
-    } else if (dateFormat === EPOCH) {
-      fileName += currentDate.getTime();
+      return year + '-' + day + '-' + month;
+    } else if (dateFormat === NONE) {
+      return '';
+    } else {
+      return currentDate.getTime();
     }
 
     function _determineDay() {
@@ -99,8 +150,8 @@ function createFileName() {
     }
   }
 
-  function _addExtension() {
-    fileName += '.txt';
+  function _getExtension() {
+    return '.txt';
   }
 }
 
@@ -115,8 +166,21 @@ function startDownloadOfTextToFile(url, fileName) {
   } else {
     options.saveAs = true;
   }
-  chrome.downloads.download(options, function() {
-    notify('Text saved.');
+  chrome.downloads.download(options, function(downloadId) {
+    if (downloadId) {
+      if (notifications) {
+        notify('Text saved.');
+      }
+    } else {
+      var error = chrome.runtime.lastError.toString();
+      if (error.indexOf('Download canceled by the user') >= 0) {
+        if (notifications) {
+          notify('Save canceled.');
+        }
+      } else {
+        notify('Error occured.');
+      }
+    }
   });
 }
 
@@ -145,23 +209,58 @@ function notify(message) {
 
 chrome.storage.sync.get({
   fileNamePrefix: DEFAULT_FILE_NAME_PREFIX,
-  dateFormat: 0,
+  dateFormat: '0',
+  fileNameComponentOrder: '0',
+  prefixPageTitleInFileName: false,
+  fileNameComponentSeparator: '-',
   urlInFile: false,
-  showDirSelectionDialog: false,
+  directorySelectionDialog: false,
   notifications: true,
   conflictAction: 'uniquify'
 }, function(items) {
   fileNamePrefix = items.fileNamePrefix;
   dateFormat = items.dateFormat;
+  fileNameComponentOrder = items.fileNameComponentOrder;
+  prefixPageTitleInFileName = items.prefixPageTitleInFileName;
+  fileNameComponentSeparator: items.fileNameComponentSeparator;
   urlInFile = items.urlInFile;
   directorySelectionDialog = items.directorySelectionDialog;
   notifications = items.notifications;
   conflictAction = items.conflictAction;
 });
 
+function getSelectionText() {
+  var text = '';
+  var activeEl = document.activeElement;
+  var activeElTagName = activeEl ? activeEl.tagName.toLowerCase() : null;
+  if (window.getSelection) {
+    text = window.getSelection().toString();
+  }
+  return text;
+}
+
+chrome.commands.onCommand.addListener(function(command) {
+  if (command === 'save-text-to-file') {
+    chrome.tabs.executeScript({
+      code: '(' + getSelectionText.toString() + ')()',
+      allFrames: true,
+      matchAboutBlank: true
+    }, function (results) {
+      if (results[0]) {
+          saveTextToFile({
+            selectionText: results[0]
+          });
+      }
+    });
+  }
+});
+
 chrome.storage.onChanged.addListener(function(changes) {
   _updatePrefixOnChange();
   _updateDateFormatOnChange();
+  _updateFileNameComponentOrderOnChange();
+  _updatePageTitleInFileNameOnChange();
+  _updateFileNameComponentSeparatorOnChange();
   _updateUrlInFileOnChange();
   _updateDirectorySelectionOnChange();
   _updateNotificationsOnChange();
@@ -179,6 +278,30 @@ chrome.storage.onChanged.addListener(function(changes) {
     if (changes.dateFormat) {
       if (changes.dateFormat.newValue !== changes.dateFormat.oldValue) {
         dateFormat = changes.dateFormat.newValue;
+      }
+    }
+  }
+
+  function _updateFileNameComponentOrderOnChange() {
+    if (changes.fileNameComponentOrder) {
+      if (changes.fileNameComponentOrder.newValue !== changes.fileNameComponentOrder.oldValue) {
+        fileNameComponentOrder = changes.fileNameComponentOrder.newValue;
+      }
+    }
+  }
+
+  function _updatePageTitleInFileNameOnChange() {
+    if (changes.prefixPageTitleInFileName) {
+      if (changes.prefixPageTitleInFileName.newValue !== changes.prefixPageTitleInFileName.oldValue) {
+        prefixPageTitleInFileName = changes.prefixPageTitleInFileName.newValue;
+      }
+    }
+  }
+
+  function _updateFileNameComponentSeparatorOnChange() {
+    if (changes.fileNameComponentSeparator) {
+      if (changes.fileNameComponentSeparator.newValue !== changes.fileNameComponentSeparator.oldValue) {
+        fileNameComponentSeparator = changes.fileNameComponentSeparator.newValue;
       }
     }
   }
