@@ -13,6 +13,9 @@
  * limitations under the License.
  *******************************************************************************/
 
+const HOST_APPLICATION_NAME = 'savetexttofile';
+const TEST_CONNECTIVITY_ACTION = 'TEST_CONNECTIVITY';
+const SAVE_TEXT_ACTION = 'SAVE';
 const MENU_ITEM_ID = 'save-text-to-file-menu-item';
 const NOTIFICATION_ID = 'save-text-to-file-notification';
 const EXTENSION_TITLE = 'Save text to file';
@@ -34,9 +37,40 @@ var fileNameComponentOrder;
 var prefixPageTitleInFileName;
 var fileNameComponentSeparator = '-';
 var urlInFile;
+var directory;
 var directorySelectionDialog;
 var notifications;
 var conflictAction;
+var testConnectivityPayload = {
+  action: TEST_CONNECTIVITY_ACTION
+};
+
+function saveTextViaApp(directory, sanitizedFileName, fileContents) {
+  var payload = {
+    action: SAVE_TEXT_ACTION,
+    filename: sanitizedFileName,
+    directory: directory,
+    fileContent: fileContents,
+    conflictAction: conflictAction
+  };
+
+  chrome.runtime.sendNativeMessage(
+    HOST_APPLICATION_NAME,
+    payload, function(response) {
+      if (chrome.runtime.lastError) {
+        notify('Error occured communicating with host application. Check browser console.');
+        console.log(chrome.runtime.lastError);
+      } else {
+        var json = JSON.parse(response);
+        if (json.status === 'Success') {
+            notify('Text saved.');
+        } else {
+          notify('Error occured saving text via host application. Check browser console.');
+          console.log("SaveTextToFile: Native application response: " + response);
+        }
+      }
+  });
+}
 
 function saveTextToFile(info) {
   chrome.tabs.executeScript({
@@ -52,7 +86,18 @@ function saveTextToFile(info) {
         var url = URL.createObjectURL(blob);
         createFileName(function(fileName) {
           var sanitizedFileName = sanitizeFileName(fileName);
-          startDownloadOfTextToFile(url, sanitizedFileName);
+          chrome.runtime.sendNativeMessage(HOST_APPLICATION_NAME, testConnectivityPayload, function(response) {
+            if (chrome.runtime.lastError) {
+              console.log('SaveTextToFile: Error communicating between the native application and web extension.');
+              console.log(chrome.runtime.lastError.message);
+              startDownloadOfTextToFile(url, sanitizedFileName);
+            } else {
+              var responseObject = JSON.parse(response);
+              if (responseObject.status === 'Success') {
+                saveTextViaApp(directory, sanitizedFileName, fileContents);
+              }
+            }
+          });
         });
       });
     }
@@ -179,6 +224,7 @@ function startDownloadOfTextToFile(url, fileName) {
         }
       } else {
         notify('Error occured.');
+        console.log(error);
       }
     }
   });
@@ -214,6 +260,7 @@ chrome.storage.sync.get({
   prefixPageTitleInFileName: false,
   fileNameComponentSeparator: '-',
   urlInFile: false,
+  directory: '',
   directorySelectionDialog: false,
   notifications: true,
   conflictAction: 'uniquify'
@@ -224,6 +271,7 @@ chrome.storage.sync.get({
   prefixPageTitleInFileName = items.prefixPageTitleInFileName;
   fileNameComponentSeparator: items.fileNameComponentSeparator;
   urlInFile = items.urlInFile;
+  directory = items.directory;
   directorySelectionDialog = items.directorySelectionDialog;
   notifications = items.notifications;
   conflictAction = items.conflictAction;
@@ -262,6 +310,7 @@ chrome.storage.onChanged.addListener(function(changes) {
   _updatePageTitleInFileNameOnChange();
   _updateFileNameComponentSeparatorOnChange();
   _updateUrlInFileOnChange();
+  _updateDirectoryOnChange();
   _updateDirectorySelectionOnChange();
   _updateNotificationsOnChange();
   _updateConflictActionOnChange();
@@ -314,6 +363,14 @@ chrome.storage.onChanged.addListener(function(changes) {
     }
   }
 
+  function _updateDirectoryOnChange() {
+    if (changes.directory) {
+      if (changes.directory.newValue !== changes.directory.oldValue) {
+        directory = changes.directory.newValue;
+      }
+    }
+  }
+
   function _updateDirectorySelectionOnChange() {
     if (changes.directorySelectionDialog) {
       if (changes.directorySelectionDialog.newValue !== changes.directorySelectionDialog.oldValue) {
@@ -335,6 +392,17 @@ chrome.storage.onChanged.addListener(function(changes) {
       if (changes.conflictAction.newValue !== changes.conflictAction.oldValue) {
         conflictAction = changes.conflictAction.newValue;
       }
+    }
+  }
+});
+
+var sending = chrome.runtime.sendNativeMessage(HOST_APPLICATION_NAME, testConnectivityPayload, function(response) {
+  if (chrome.runtime.lastError) {
+    console.log("ERROR: " + chrome.runtime.lastError.message);
+  } else {
+    var responseObject = JSON.parse(response);
+    if (responseObject.status === 'Success') {
+      console.log('SaveTextToFile: Successfully tested communication between native application and webextension.');
     }
   }
 });

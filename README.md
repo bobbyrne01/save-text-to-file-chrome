@@ -1,53 +1,93 @@
 save-text-to-file-chrome
 ==
 
-1. Highlight text on a page
-2. Right click
-3. Select `Save text to file`
-4. Text is saved to a `.txt` file in `~/Downloads/`
+Save Text to File simplifies saving snippets of text from a web browser to a file on the local computer.
 
-## Options
+# Installation
 
-Extensions -> Save text to file -> Options
+The recommended setup is to install both the:
+* Web extension
+* Host application
 
-1. Filename prefix
+## Install web-extension
 
-        `custom-prefix--`.txt
+Download and install from [Chrome Web Store](https://chrome.google.com/webstore/detail/save-text-to-file/mkepenkbhepjelljcfiooignmpfgochi).
 
-2. Add date or epoch to filename
+## Install host application
 
-Output using each of the different options:
+**Note:** If installing the host application, ensure [Python](https://www.python.org/downloads/) is installed beforehand.
 
-    custom-prefix--`1514072979`.txt
-    custom-prefix--`20012017`.txt
-    custom-prefix--`01202017`.txt
-    custom-prefix--`20170120`.txt
-    custom-prefix--`20172001`.txt
-    custom-prefix--.txt
+Download the script and manifest files:
+ - `savetexttofile.py`
+ - `savetexttofile.bat` (Only needed for Windows)
+ - `savetexttofile.json`
 
-3. Save current URL in file
+from [Github](https://github.com/bobbyrne01/save-text-to-file-chrome/tree/master/app).
 
-Whether to include the current URL at the top of the saved file.
+Move `savetexttofile.py` (and `savetexttofile.bat` on Windows) to a directory e.g:
+ - Windows: `C:\Users\Robert\ExtensionNativeHosts\`
+ - Mac: `/Users/Robert/ExtensionNativeHosts/`
+ - Linux: `/home/Robert/ExtensionNativeHosts/`
 
-4. Show directory selection dialog
+Then follow the steps specific to each platform listed below ..
 
-Whether user can select an alternative directory and/or filename before text is saved.
 
-5. Show notifications
+### Windows
 
-Whether notifications are displayed every-time text is saved.
+Modify the manifest `savetexttofile.json`, changing the `path` value to the location used previously. And change the `.py` extension to `.bat`:
+```
+"path": "/path/to/savetexttofile.py"
+```
+->
+```
+"path": "C:\Users\Robert\ExtensionNativeHosts\savetexttofile.bat"
+```
+Then copy the manifest to:
+```
+C:\Users\Robert\ExtensionNativeHosts\
+```
 
-6. If file exists
+Modify `savetexttofile.bat`, changing the path to the location used previously:
+```
+call python C:\path\to\savetexttofile.py
+```
+->
+```
+call python C:\Users\Robert\ExtensionNativeHosts\savetexttofile.py
+```
 
-    Uniquify
+Open the `Registry Editor` application from the start menu and add the appropriate keys outlined for your system from [Chrome](https://developer.chrome.com/apps/nativeMessaging#native-messaging-host-location)
 
-        To avoid duplication, the filename is changed
-        to include a counter before the filename extension.
 
-    Overwrite
+### Mac
 
-        The existing file will be overwritten with the new file.
+Modify `savetexttofile.json`, changing the `path` value to the location used previously:
+```
+"path": "/path/to/savetexttofile.py"
+```
+->
+```
+"path": "/Users/Robert/ExtensionNativeHosts/savetexttofile.py"
+```
+Then copy the manifest to this location under the user's home directory:
+```
+~/.config/google-chrome/NativeMessagingHosts/savetexttofile.json
+```
 
-    Prompt
 
-        The user will be prompted with a file chooser dialog.
+### Linux
+
+Modify `savetexttofile.json`, changing the `path` value to the location used previously:
+```
+"path": "/path/to/savetexttofile.py"
+```
+->
+```
+"path": "/home/Robert/ExtensionNativeHosts/savetexttofile.py"
+```
+Then copy the manifest to these locations under the user's home directory:
+```
+~/.mozilla/native-messaging-hosts/savetexttofile.json
+~/.mozilla/managed-storage/savetexttofile.json
+~/.mozilla/pkcs11-modules/savetexttofile.json
+```
