@@ -1,7 +1,7 @@
 {
   "name": "Save text to file",
   "description": "Saves highlighted text to a file.",
-  "version": "1.0",
+  "version": "2.0",
   "permissions": ["contextMenus", "downloads", "storage", "notifications", "activeTab", "nativeMessaging"],
   "background": {"scripts": ["backgroundScript.js"], "persistent": false},
   "manifest_version": 2,
