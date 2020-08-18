@@ -1,0 +1,9 @@
+{
+  "name": "savetexttofile",
+  "description": "Native application that saves text to a file on behalf of a web-extension.",
+  "path": "C:\\savetexttofile\\savetexttofile.py",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://mkepenkbhepjelljcfiooignmpfgochi/"
+  ]
+}

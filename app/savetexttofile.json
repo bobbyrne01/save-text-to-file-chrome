@@ -1,6 +1,6 @@
 {
   "name": "savetexttofile",
-  "description": "Native application that saves text to a file on behalf of a webextension.",
+  "description": "Native application that saves text to a file on behalf of a web-extension.",
   "path": "/path/to/savetexttofile.py",
   "type": "stdio",
   "allowed_origins": [

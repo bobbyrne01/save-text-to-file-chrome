@@ -1,63 +1,50 @@
-save-text-to-file-chrome
+Save Text to File (Chrome)
 ==
 
-Save Text to File simplifies saving snippets of text from a web browser to a file on the local computer.
+Save Text to File saves snippets of text from a web page to a file on the local computer.
 
-# Installation
+![](demo.gif)
 
-The recommended setup is to install both the:
-* Web extension
-* Host application
+The recommended setup is to install both:
+* Browser extension, and
+* Host application.
 
-## Install web-extension
+## Step 1. Installing the Browser Extension
 
 Download and install from [Chrome Web Store](https://chrome.google.com/webstore/detail/save-text-to-file/mkepenkbhepjelljcfiooignmpfgochi).
 
-## Install host application
+## Step 2. Install host application
 
-**Note:** If installing the host application, ensure [Python](https://www.python.org/downloads/) is installed beforehand.
+**Note:** If installing the host application, ensure the latest version of [Python](https://www.python.org/downloads/) is installed beforehand.
 
-Download the script and manifest files:
- - `savetexttofile.py`
- - `savetexttofile.bat` (Only needed for Windows)
- - `savetexttofile.json`
+Download the `app/` directory, from [Github](https://github.com/bobbyrne01/save-text-to-file-chrome/tree/master/app). 
 
-from [Github](https://github.com/bobbyrne01/save-text-to-file-chrome/tree/master/app).
+Save `app/` and its contents to a directory on your computer, example: `C:\savetexttofile\` or `/Users/Robert/savetexttofile/`.
 
-Move `savetexttofile.py` (and `savetexttofile.bat` on Windows) to a directory e.g:
- - Windows: `C:\Users\Robert\ExtensionNativeHosts\`
- - Mac: `/Users/Robert/ExtensionNativeHosts/`
- - Linux: `/home/Robert/ExtensionNativeHosts/`
-
-Then follow the steps specific to each platform listed below ..
-
+Then follow the steps specific to your platform below ..
 
 ### Windows
 
-Modify the manifest `savetexttofile.json`, changing the `path` value to the location used previously. And change the `.py` extension to `.bat`:
+Assuming you saved `app/` to `C:\savetexttofile\` on your computer.
+
+Open a command prompt as Administrator (Start menu -> cmd -> Run as admin).
+
+Change directory to where the saved `app/` contents are e.g:
+
 ```
-"path": "/path/to/savetexttofile.py"
-```
-->
-```
-"path": "C:\Users\Robert\ExtensionNativeHosts\savetexttofile.bat"
-```
-Then copy the manifest to:
-```
-C:\Users\Robert\ExtensionNativeHosts\
+cd C:\savetexttofile
 ```
 
-Modify `savetexttofile.bat`, changing the path to the location used previously:
+Run the Windows installer:
 ```
-call python C:\path\to\savetexttofile.py
-```
-->
-```
-call python C:\Users\Robert\ExtensionNativeHosts\savetexttofile.py
+install_host.bat
 ```
 
-Open the `Registry Editor` application from the start menu and add the appropriate keys outlined for your system from [Chrome](https://developer.chrome.com/apps/nativeMessaging#native-messaging-host-location)
+The host application should now be installed.
 
+Restart Chrome, and check the browser extension's options.
+
+Save Text to File's options page should indicate the host application has been successfully configured.
 
 ### Mac
 
@@ -67,7 +54,7 @@ Modify `savetexttofile.json`, changing the `path` value to the location used pre
 ```
 ->
 ```
-"path": "/Users/Robert/ExtensionNativeHosts/savetexttofile.py"
+"path": "/Users/Robert/savetexttofile/savetexttofile.py"
 ```
 Then copy the manifest to this location under the user's home directory:
 ```
@@ -83,7 +70,7 @@ Modify `savetexttofile.json`, changing the `path` value to the location used pre
 ```
 ->
 ```
-"path": "/home/Robert/ExtensionNativeHosts/savetexttofile.py"
+"path": "/home/Robert/savetexttofile/savetexttofile.py"
 ```
 Then copy the manifest to these locations under the user's home directory:
 ```
