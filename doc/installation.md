@@ -67,7 +67,7 @@ Modify `savetexttofile.json`, changing the `path` value to the location used pre
 ```
 Then copy the manifest to this location under the user's home directory:
 ```
-~/.config/google-chrome/NativeMessagingHosts/savetexttofile.json
+~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts/savetexttofile.json
 ```
 
 Restart Chrome, and check the browser extension's options.
@@ -87,9 +87,7 @@ Modify `savetexttofile.json`, changing the `path` value to the location used pre
 ```
 Then copy the manifest to these locations under the user's home directory:
 ```
-~/.mozilla/native-messaging-hosts/savetexttofile.json
-~/.mozilla/managed-storage/savetexttofile.json
-~/.mozilla/pkcs11-modules/savetexttofile.json
+~/.config/google-chrome/NativeMessagingHosts/savetexttofile.json
 ```
 
 Restart Chrome, and check the browser extension's options.

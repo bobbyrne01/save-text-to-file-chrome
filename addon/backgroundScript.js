@@ -56,6 +56,7 @@ function saveTextViaApp(directory, sanitizedFileName, fileContents) {
     conflictAction: conflictAction
   };
 
+
   chrome.runtime.sendNativeMessage(
     HOST_APPLICATION_NAME,
     payload, function(response) {
@@ -427,13 +428,21 @@ chrome.storage.onChanged.addListener(function(changes) {
   }
 });
 
-var sending = chrome.runtime.sendNativeMessage(HOST_APPLICATION_NAME, testConnectivityPayload, function(response) {
+chrome.runtime.sendNativeMessage(HOST_APPLICATION_NAME, testConnectivityPayload, function(response) {
   if (chrome.runtime.lastError) {
-    console.log("ERROR: " + chrome.runtime.lastError.message);
+    console.log('ERROR: ' + chrome.runtime.lastError.message);
   } else {
     var responseObject = JSON.parse(response);
     if (responseObject.status === 'Success') {
       console.log('SaveTextToFile: Successfully tested communication between native application and webextension.');
     }
+  }
+});
+
+chrome.runtime.onInstalled.addListener(function (details) {
+  if (details.reason === 'install') {
+    chrome.tabs.create({
+      url: chrome.extension.getURL('options.html')
+    });
   }
 });
