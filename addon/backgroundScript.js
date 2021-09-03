@@ -36,6 +36,7 @@ var dateFormat;
 var fileNameComponentOrder;
 var prefixPageTitleInFileName;
 var fileNameComponentSeparator = '-';
+var pageTitleInFile;
 var urlInFile;
 var templateText;
 var positionOfTemplateText;
@@ -55,7 +56,6 @@ function saveTextViaApp(directory, sanitizedFileName, fileContents) {
     fileContent: fileContents,
     conflictAction: conflictAction
   };
-
 
   chrome.runtime.sendNativeMessage(
     HOST_APPLICATION_NAME,
@@ -119,18 +119,23 @@ function createFileContents(selectionText, callback) {
     selectionText = selectionText + '\n\n' + templateText;
   }
 
-  if (urlInFile) {
-    chrome.tabs.query({
-      active: true,
-      lastFocusedWindow: true
-    }, function(tabs) {
-      var url = tabs[0].url;
-      var text = url + '\n\n' + selectionText;
-      callback(text);
-    });
-  } else {
-    callback(selectionText);
-  }
+  chrome.tabs.query({
+    active: true,
+    lastFocusedWindow: true
+  }, function(tabs) {
+    var title = tabs[0].title;
+    var url = tabs[0].url;
+    var text = selectionText;
+
+    if (pageTitleInFile) {
+      text = title + '\n\n' + text;
+    }
+    if (urlInFile) {
+      text = url + '\n\n' + text;
+    }
+
+    callback(text);
+  });
 }
 
 function createFileName(callback) {
@@ -269,6 +274,7 @@ chrome.storage.sync.get({
   fileNameComponentOrder: '0',
   prefixPageTitleInFileName: false,
   fileNameComponentSeparator: '-',
+  pageTitleInFile: false,
   urlInFile: false,
   templateText: '',
   positionOfTemplateText: 0,
@@ -282,6 +288,7 @@ chrome.storage.sync.get({
   fileNameComponentOrder = items.fileNameComponentOrder;
   prefixPageTitleInFileName = items.prefixPageTitleInFileName;
   fileNameComponentSeparator = items.fileNameComponentSeparator;
+  pageTitleInFile = items.pageTitleInFile;
   urlInFile = items.urlInFile;
   templateText = items.templateText;
   positionOfTemplateText = items.positionOfTemplateText;
@@ -323,6 +330,7 @@ chrome.storage.onChanged.addListener(function(changes) {
   _updateFileNameComponentOrderOnChange();
   _updatePageTitleInFileNameOnChange();
   _updateFileNameComponentSeparatorOnChange();
+  _updatePageTitleInFileOnChange();
   _updateUrlInFileOnChange();
   _updateTemplateTextOnChange();
   _updatePositionOfTemplateTextOnChange();
@@ -367,6 +375,14 @@ chrome.storage.onChanged.addListener(function(changes) {
     if (changes.fileNameComponentSeparator) {
       if (changes.fileNameComponentSeparator.newValue !== changes.fileNameComponentSeparator.oldValue) {
         fileNameComponentSeparator = changes.fileNameComponentSeparator.newValue;
+      }
+    }
+  }
+
+  function _updatePageTitleInFileOnChange() {
+    if (changes.pageTitleInFile) {
+      if (changes.pageTitleInFile.newValue !== changes.pageTitleInFile.oldValue) {
+        urlInFile = changes.pageTitleInFile.newValue;
       }
     }
   }

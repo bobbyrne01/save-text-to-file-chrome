@@ -70,7 +70,7 @@ Then copy the manifest to this location under the user's home directory:
 ~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts/savetexttofile.json
 ```
 
-Restart Chrome, and check the browser extension's options.
+Restart browser, and check the browser extension's options.
 
 Save Text to File's options page should indicate the host application has been successfully configured.
 
@@ -90,6 +90,11 @@ Then copy the manifest to these locations under the user's home directory:
 ~/.config/google-chrome/NativeMessagingHosts/savetexttofile.json
 ```
 
-Restart Chrome, and check the browser extension's options.
+Ensure `/Users/Robert/savetexttofile/savetexttofile.py` is executable:
+```
+chmod +x /Users/Robert/savetexttofile/savetexttofile.py
+```
+
+Restart browser, and check the browser extension's options.
 
 Save Text to File's options page should indicate the host application has been successfully configured.
